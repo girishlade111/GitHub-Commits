@@ -49,3 +49,7 @@ Timestamp: 2026-03-04T11:51:30.369Z
 ---
 Commit 12: feat: add configuration management
 Timestamp: 2026-03-04T11:51:32.404Z
+
+---
+Commit 13: test: add CLI argument parsing tests
+Timestamp: 2026-03-04T11:51:34.459Z
