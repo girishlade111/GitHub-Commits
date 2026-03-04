@@ -21,3 +21,7 @@ Timestamp: 2026-03-04T11:51:17.689Z
 ---
 Commit 5: feat: add package publishing
 Timestamp: 2026-03-04T11:51:19.536Z
+
+---
+Commit 6: refactor: extract command handlers
+Timestamp: 2026-03-04T11:51:21.349Z
