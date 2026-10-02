@@ -16,7 +16,7 @@ A Next.js + TypeScript project that doubles as a learn-by-doing playground for G
 
 ## 🛠️ Tech stack
 
-Next.js 14 • React 18 • TypeScript • Tailwind CSS • PostCSS
+Next.js 16 • React 19 • TypeScript • Tailwind CSS • PostCSS
 
 ## 🚀 Getting started
 
