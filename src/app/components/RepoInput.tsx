@@ -2,7 +2,8 @@
 
 import { useState, useCallback, FormEvent } from 'react';
 import { useCommitStore } from '../store/commitStore';
-import { VALID_CATEGORIES, CATEGORIES_BY_GROUP } from '../lib/validation';
+import { VALID_CATEGORIES, CATEGORIES_BY_GROUP, validateRequest, parseRepoUrl } from '../lib/validation';
+import { generateEducationalCommits } from '../lib/github';
 import { Eye, EyeOff, GitCommit, Send, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -90,26 +91,52 @@ export default function RepoInput() {
     setFieldErrors({});
     
     try {
-      const response = await fetch('/api/generate-commits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repoUrl: formData.repoUrl,
-          token: formData.token,
-          commitCount: formData.commitCount,
-          category: formData.category,
-        }),
+      // Client-side validation (same rules the old /api route used server-side)
+      const validation = validateRequest({
+        repoUrl: formData.repoUrl,
+        token: formData.token,
+        commitCount: formData.commitCount,
+        category: formData.category,
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate commits');
+
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(' '));
       }
-      
-      addCommits(data.commits, data.repository, data.categoryUsed, data.totalCommits);
+
+      const parsedRepo = parseRepoUrl(formData.repoUrl);
+      if (!parsedRepo) {
+        throw new Error('Invalid repository URL format');
+      }
+
+      // Fully static site: commit generation runs in the browser against the
+      // GitHub API using the user's own token (never leaves their machine).
+      const commits = await generateEducationalCommits(
+        formData.token,
+        parsedRepo.owner,
+        parsedRepo.repo,
+        formData.commitCount,
+        formData.category
+      );
+
+      addCommits(
+        commits.map((c) => ({
+          sha: c.sha.substring(0, 7),
+          message: c.message,
+          timestamp: c.timestamp,
+          branch: c.branch,
+          url: c.url,
+        })),
+        `${parsedRepo.owner}/${parsedRepo.repo}`,
+        formData.category,
+        commits.length
+      );
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : 'An unexpected error occurred';
       setError(errorMessage);
     }
   }, [formData, validateField, reset, setLoading, setError, addCommits, setStartTime]);
